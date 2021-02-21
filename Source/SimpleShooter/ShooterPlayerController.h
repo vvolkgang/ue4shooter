@@ -20,7 +20,9 @@ protected:
 	virtual void BeginPlay() override;
 
 public:
-
+	UPROPERTY(VisibleAnywhere)
+	UUserWidget* HUD;
+	
 	virtual void GameHasEnded(AActor* EndGameFocus, bool bIsWinner) override;
 
 
@@ -40,7 +42,4 @@ private:
 	float RestartDelay = 5.f;
 
 	FTimerHandle RestartTimer;
-
-	UPROPERTY()
-	UUserWidget* HUD;
 };

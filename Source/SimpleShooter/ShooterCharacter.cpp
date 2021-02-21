@@ -4,7 +4,9 @@
 #include "ShooterCharacter.h"
 
 #include "Gun.h"
+#include "PickableItemBase.h"
 #include "Components/CapsuleComponent.h"
+#include "Kismet/GameplayStatics.h"
 #include "SimpleShooter/SimpleShooterGameModeBase.h"
 
 // Sets default values
@@ -56,6 +58,28 @@ float AShooterCharacter::GetSelectedWeaponMaxAmmo() const
 	return Gun->MaxAmmo;
 }
 
+void AShooterCharacter::AddHealth(float HealthToAdd)
+{
+	Health = FMath::Min(MaxHealth, Health + HealthToAdd);
+}
+
+bool AShooterCharacter::CanAddHealth() const
+{
+	return Health < MaxHealth;
+}
+
+void AShooterCharacter::AddAmmo(int32 Ammo)
+{
+	Gun->AddAmmo(Ammo);
+}
+
+
+bool AShooterCharacter::CanAddAmmo() const
+{
+	return Gun->Ammo < Gun->MaxAmmo;
+}
+
+
 // Called every frame
 void AShooterCharacter::Tick(float DeltaTime)
 {
@@ -77,6 +101,8 @@ void AShooterCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCo
 
 	PlayerInputComponent->BindAction(TEXT("Jump"), IE_Pressed, this, &ACharacter::Jump);
 	PlayerInputComponent->BindAction(TEXT("Shoot"), IE_Pressed, this, &AShooterCharacter::FireGun);
+	PlayerInputComponent->BindAction(TEXT("UseItem"), IE_Pressed, this, &AShooterCharacter::OnUseItem);
+
 }
 
 float AShooterCharacter::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser)
@@ -130,6 +156,28 @@ void AShooterCharacter::FireGun()
 	Gun->PullTrigger();
 	//BigPipiGun->PullTrigger();
 }
+
+void AShooterCharacter::OnUseItem()
+{
+	TArray<AActor*> Result;
+	GetOverlappingActors(Result, APickableItemBase::StaticClass());
+
+	if (Result.Num() == 0)
+		return;
+
+	for(AActor* Actor: Result)
+	{
+		Cast<APickableItemBase>(Actor)->PickItem(this);
+	}
+	
+	/*
+	auto PlayerPawn = UGameplayStatics::GetPlayerPawn(GetWorld(), 0);
+	if (IsOverlappingActor(PlayerPawn))
+	{
+		PickItem(PlayerPawn);
+	}*/
+}
+
 
 
 

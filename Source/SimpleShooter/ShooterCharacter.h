@@ -35,6 +35,18 @@ public:
 	UFUNCTION(BlueprintPure)
 	float GetSelectedWeaponMaxAmmo() const;
 
+	UFUNCTION(BlueprintCallable)
+	void AddHealth(float HealthToAdd);
+
+	UFUNCTION(BlueprintPure)
+	bool CanAddHealth() const;
+
+	UFUNCTION(BlueprintCallable)
+	void AddAmmo(int32 Ammo);
+
+	UFUNCTION(BlueprintPure)
+	bool CanAddAmmo() const;
+
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
@@ -49,6 +61,7 @@ private:
 	//void LookUp(float AxisValue);
 	void LookUpRate(float AxisValue); //Used for Controllers
 	void LookRightRate(float AxisValue);
+	void OnUseItem();
 
 	UPROPERTY(EditAnywhere)
 	float RotationRate = 80.f;

@@ -54,6 +54,11 @@ void AGun::PullTrigger()
 	}	
 }
 
+void AGun::AddAmmo(int32 AmmoToAdd)
+{
+	Ammo = FMath::Min(MaxAmmo, Ammo + AmmoToAdd);
+}
+
 // Called when the game starts or when spawned
 void AGun::BeginPlay()
 {

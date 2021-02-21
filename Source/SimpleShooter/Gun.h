@@ -23,6 +23,8 @@ public:
 
 	UPROPERTY(EditAnywhere)
 	float MaxAmmo = 10.f;
+
+	void AddAmmo(int32 AmmoToAdd);
 	
 protected:
 	// Called when the game starts or when spawned
