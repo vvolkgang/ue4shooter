@@ -28,7 +28,13 @@ public:
 
 	UFUNCTION(BlueprintPure)
 	float GetHealthPercent() const;
-	
+
+	UFUNCTION(BlueprintPure)
+	float GetSelectedWeaponAmmo() const;
+
+	UFUNCTION(BlueprintPure)
+	float GetSelectedWeaponMaxAmmo() const;
+
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 

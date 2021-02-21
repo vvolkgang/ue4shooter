@@ -46,6 +46,16 @@ float AShooterCharacter::GetHealthPercent() const
 	return Health / MaxHealth;
 }
 
+float AShooterCharacter::GetSelectedWeaponAmmo() const
+{
+	return Gun->Ammo;
+}
+
+float AShooterCharacter::GetSelectedWeaponMaxAmmo() const
+{
+	return Gun->MaxAmmo;
+}
+
 // Called every frame
 void AShooterCharacter::Tick(float DeltaTime)
 {
@@ -120,6 +130,7 @@ void AShooterCharacter::FireGun()
 	Gun->PullTrigger();
 	//BigPipiGun->PullTrigger();
 }
+
 
 
 //void AShooterCharacter::LookUp(float AxisValue)

@@ -22,6 +22,14 @@ AGun::AGun()
 
 void AGun::PullTrigger()
 {
+	if(IsClipEmpty())
+	{
+		UGameplayStatics::SpawnSoundAttached(EmptyClipSound, Mesh, TEXT("MuzzleFlashSocket"));
+		return;
+	}
+
+	--Ammo;
+	
 	UGameplayStatics::SpawnEmitterAttached(MuzzleFlash, Mesh, TEXT("MuzzleFlashSocket"));
 	UGameplayStatics::SpawnSoundAttached(MuzzleSound, Mesh, TEXT("MuzzleFlashSocket"));
 	
@@ -86,5 +94,10 @@ AController* AGun::GetOwnerController() const
 		return nullptr;
 
 	return OwnerPawn->GetController();
+}
+
+bool AGun::IsClipEmpty() const
+{
+	return Ammo <= 0;
 }
 

@@ -15,15 +15,18 @@ class SIMPLESHOOTER_API AGun : public AActor
 public:	
 	// Sets default values for this actor's properties
 	AGun();
+	virtual void Tick(float DeltaTime) override;
 	void PullTrigger();
+	
+	UPROPERTY(VisibleAnywhere)
+	float Ammo = 10.f;
 
+	UPROPERTY(EditAnywhere)
+	float MaxAmmo = 10.f;
+	
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
-
-public:	
-	// Called every frame
-	virtual void Tick(float DeltaTime) override;
 
 
 private:
@@ -47,6 +50,9 @@ private:
 	USoundBase* WorldImpactSound;
 
 	UPROPERTY(EditAnywhere)
+	USoundBase* EmptyClipSound;
+
+	UPROPERTY(EditAnywhere)
 	float MaxRange = 1000.f;
 
 	UPROPERTY(EditAnywhere)
@@ -55,4 +61,7 @@ private:
 	bool GunTrace(OUT FHitResult& Hit, OUT FVector& ShotDirection);
 
 	AController* GetOwnerController() const;
+
+	bool IsClipEmpty() const;
+	
 };
