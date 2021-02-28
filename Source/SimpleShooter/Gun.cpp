@@ -7,10 +7,11 @@
 #include "DrawDebugHelpers.h"
 
 #define OUT
+
 // Sets default values
 AGun::AGun()
 {
- 	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
+	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 
 	Root = CreateDefaultSubobject<USceneComponent>(TEXT("Root"));
@@ -20,50 +21,12 @@ AGun::AGun()
 	Mesh->SetupAttachment(RootComponent);
 }
 
-void AGun::PullTrigger()
-{
-	if(IsClipEmpty())
-	{
-		UGameplayStatics::SpawnSoundAttached(EmptyClipSound, Mesh, TEXT("MuzzleFlashSocket"));
-		return;
-	}
-
-	--Ammo;
-	
-	UGameplayStatics::SpawnEmitterAttached(MuzzleFlash, Mesh, TEXT("MuzzleFlashSocket"));
-	UGameplayStatics::SpawnSoundAttached(MuzzleSound, Mesh, TEXT("MuzzleFlashSocket"));
-	
-	FHitResult Hit;
-	FVector ShotDirection;
-	const bool bSuccess = GunTrace(OUT Hit, OUT ShotDirection);
-
-	if(bSuccess && WorldImpactEffect != nullptr)
-	{
-		//DrawDebugPoint(GetWorld(), Hit.Location, 20, FColor::Red, true);
-		UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), WorldImpactEffect, Hit.Location, ShotDirection.Rotation());
-		UGameplayStatics::SpawnSoundAtLocation(GetWorld(), WorldImpactSound, Hit.Location);
-
-		AActor* HitActor = Hit.GetActor();
-		if(HitActor != nullptr)
-		{
-			FPointDamageEvent DamageEvent(Damage, Hit, ShotDirection, nullptr);
-
-			auto OwnerController = GetOwnerController();
-			HitActor->TakeDamage(Damage, DamageEvent, OwnerController, this);
-		}
-	}	
-}
-
-void AGun::AddAmmo(int32 AmmoToAdd)
-{
-	Ammo = FMath::Min(MaxAmmo, Ammo + AmmoToAdd);
-}
-
 // Called when the game starts or when spawned
 void AGun::BeginPlay()
 {
 	Super::BeginPlay();
-	
+
+	Ammo = MaxAmmo;
 }
 
 // Called every frame
@@ -71,6 +34,59 @@ void AGun::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
+}
+
+void AGun::PullTrigger()
+{
+	if (IsClipEmpty())
+	{
+		UGameplayStatics::SpawnSoundAttached(EmptyClipSound, Mesh, TEXT("MuzzleFlashSocket"));
+		return;
+	}
+
+	--Ammo;
+
+	UGameplayStatics::SpawnEmitterAttached(MuzzleFlash, Mesh, TEXT("MuzzleFlashSocket"));
+	UGameplayStatics::SpawnSoundAttached(MuzzleSound, Mesh, TEXT("MuzzleFlashSocket"));
+
+	FHitResult Hit;
+	FVector ShotDirection;
+	const bool bSuccess = GunTrace(OUT Hit, OUT ShotDirection);
+
+	if (bSuccess && WorldImpactEffect != nullptr)
+	{
+		//DrawDebugPoint(GetWorld(), Hit.Location, 20, FColor::Red, true);
+		UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), WorldImpactEffect, Hit.Location, ShotDirection.Rotation());
+		UGameplayStatics::SpawnSoundAtLocation(GetWorld(), WorldImpactSound, Hit.Location);
+
+		AActor* HitActor = Hit.GetActor();
+		if (HitActor != nullptr)
+		{
+			FPointDamageEvent DamageEvent(Damage, Hit, ShotDirection, nullptr);
+
+			auto OwnerController = GetOwnerController();
+			HitActor->TakeDamage(Damage, DamageEvent, OwnerController, this);
+		}
+	}
+}
+
+void AGun::AddAmmo(int32 AmmoToAdd)
+{
+	Ammo = FMath::Min(MaxAmmo, Ammo + AmmoToAdd);
+}
+
+void AGun::HideActor()
+{
+	SetActorHiddenInGame(true);
+	SetActorEnableCollision(false);
+	SetActorTickEnabled(false);
+}
+
+void AGun::ShowActor()
+{
+	SetActorHiddenInGame(false);
+	SetActorEnableCollision(true);
+	SetActorTickEnabled(true);
 }
 
 bool AGun::GunTrace(OUT FHitResult& Hit, OUT FVector& ShotDirection)
@@ -83,7 +99,7 @@ bool AGun::GunTrace(OUT FHitResult& Hit, OUT FVector& ShotDirection)
 	FRotator OwnerRotation;
 	OwnerController->GetPlayerViewPoint(OUT OwnerLocation, OUT OwnerRotation);
 	ShotDirection = -OwnerRotation.Vector();
-	
+
 	FVector End = OwnerLocation + OwnerRotation.Vector() * MaxRange;
 
 	FCollisionQueryParams Params;

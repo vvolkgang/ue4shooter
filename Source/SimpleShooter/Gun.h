@@ -11,21 +11,23 @@ UCLASS()
 class SIMPLESHOOTER_API AGun : public AActor
 {
 	GENERATED_BODY()
-	
-public:	
+
+public:
 	// Sets default values for this actor's properties
 	AGun();
 	virtual void Tick(float DeltaTime) override;
 	void PullTrigger();
-	
-	UPROPERTY(VisibleAnywhere)
-	float Ammo = 10.f;
 
 	UPROPERTY(EditAnywhere)
-	float MaxAmmo = 10.f;
+		float MaxAmmo = 10.f;
+
+	UPROPERTY(VisibleAnywhere)
+		float Ammo = MaxAmmo;
 
 	void AddAmmo(int32 AmmoToAdd);
-	
+	void HideActor();
+	void ShowActor();
+
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
@@ -34,36 +36,36 @@ protected:
 private:
 
 	UPROPERTY(VisibleAnywhere)
-	USceneComponent* Root;
+		USceneComponent* Root;
 
 	UPROPERTY(VisibleAnywhere)
-	USkeletalMeshComponent* Mesh;
+		USkeletalMeshComponent* Mesh;
 
 	UPROPERTY(EditAnywhere)
-	UParticleSystem* MuzzleFlash;
+		UParticleSystem* MuzzleFlash;
 
 	UPROPERTY(EditAnywhere)
-	USoundBase* MuzzleSound;
+		USoundBase* MuzzleSound;
 
 	UPROPERTY(EditAnywhere)
-	UParticleSystem* WorldImpactEffect;
+		UParticleSystem* WorldImpactEffect;
 
 	UPROPERTY(EditAnywhere)
-	USoundBase* WorldImpactSound;
+		USoundBase* WorldImpactSound;
 
 	UPROPERTY(EditAnywhere)
-	USoundBase* EmptyClipSound;
+		USoundBase* EmptyClipSound;
 
 	UPROPERTY(EditAnywhere)
-	float MaxRange = 1000.f;
+		float MaxRange = 1000.f;
 
 	UPROPERTY(EditAnywhere)
-	float Damage = 10.f;
+		float Damage = 10.f;
 
 	bool GunTrace(OUT FHitResult& Hit, OUT FVector& ShotDirection);
 
 	AController* GetOwnerController() const;
 
 	bool IsClipEmpty() const;
-	
+
 };

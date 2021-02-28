@@ -12,7 +12,7 @@
 // Sets default values
 AShooterCharacter::AShooterCharacter()
 {
- 	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
+	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 
 }
@@ -23,19 +23,27 @@ void AShooterCharacter::BeginPlay()
 	Super::BeginPlay();
 
 	Health = MaxHealth;
-	
-	GetMesh()->HideBoneByName(TEXT("weapon_r"), EPhysBodyOp::PBO_None);
 
-	if (GunClass == nullptr)
+	//GetMesh()->HideBoneByName(TEXT("weapon_r"), EPhysBodyOp::PBO_None);
+
+
+	if (GunClassArray.Num() == 0)
 		return;
-	
-	Gun = GetWorld()->SpawnActor<AGun>(GunClass);
-	Gun->AttachToComponent(GetMesh(), FAttachmentTransformRules::KeepRelativeTransform, TEXT("WeaponSocket"));
-	Gun->SetOwner(this);
 
-	//BigPipiGun = GetWorld()->SpawnActor<AGun>(GunClass);
-	//BigPipiGun->AttachToComponent(GetMesh(), FAttachmentTransformRules::KeepRelativeTransform, TEXT("PenisWeaponSocket"));
-	//BigPipiGun->SetOwner(this);
+	for (TSubclassOf<AGun> CurrGunClass : GunClassArray)
+	{
+		auto NewGun = GetWorld()->SpawnActor<AGun>(CurrGunClass);
+		NewGun->AttachToComponent(GetMesh(), FAttachmentTransformRules::KeepRelativeTransform, TEXT("WeaponSocket"));
+		NewGun->SetOwner(this);
+
+		NewGun->HideActor();
+		Guns.Add(NewGun);
+	}
+
+	if (Guns.Num() > 0)
+	{
+		Guns[0]->ShowActor();
+	}
 }
 
 bool AShooterCharacter::IsDead() const
@@ -50,12 +58,18 @@ float AShooterCharacter::GetHealthPercent() const
 
 float AShooterCharacter::GetSelectedWeaponAmmo() const
 {
-	return Gun->Ammo;
+	if (Guns.Num() == 0)
+		return 0;
+
+	return Guns[ActiveGunIndex]->Ammo;
 }
 
 float AShooterCharacter::GetSelectedWeaponMaxAmmo() const
 {
-	return Gun->MaxAmmo;
+	if (Guns.Num() == 0)
+		return 0;
+
+	return Guns[ActiveGunIndex]->MaxAmmo;
 }
 
 void AShooterCharacter::AddHealth(float HealthToAdd)
@@ -70,13 +84,13 @@ bool AShooterCharacter::CanAddHealth() const
 
 void AShooterCharacter::AddAmmo(int32 Ammo)
 {
-	Gun->AddAmmo(Ammo);
+	Guns[ActiveGunIndex]->AddAmmo(Ammo);
 }
 
 
 bool AShooterCharacter::CanAddAmmo() const
 {
-	return Gun->Ammo < Gun->MaxAmmo;
+	return Guns[ActiveGunIndex]->Ammo < Guns[ActiveGunIndex]->MaxAmmo;
 }
 
 
@@ -102,6 +116,11 @@ void AShooterCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCo
 	PlayerInputComponent->BindAction(TEXT("Jump"), IE_Pressed, this, &ACharacter::Jump);
 	PlayerInputComponent->BindAction(TEXT("Shoot"), IE_Pressed, this, &AShooterCharacter::FireGun);
 	PlayerInputComponent->BindAction(TEXT("UseItem"), IE_Pressed, this, &AShooterCharacter::OnUseItem);
+	PlayerInputComponent->BindAction(TEXT("Gun1"), IE_Pressed, this, &AShooterCharacter::OnChangeToGun1);
+	PlayerInputComponent->BindAction(TEXT("Gun2"), IE_Pressed, this, &AShooterCharacter::OnChangeToGun2);
+	PlayerInputComponent->BindAction(TEXT("Gun3"), IE_Pressed, this, &AShooterCharacter::OnChangeToGun3);
+	PlayerInputComponent->BindAction(TEXT("NextGun"), IE_Pressed, this, &AShooterCharacter::OnChangeToNextGun);
+	PlayerInputComponent->BindAction(TEXT("PrevGun"), IE_Pressed, this, &AShooterCharacter::OnChangeToPrevGun);
 
 }
 
@@ -113,18 +132,18 @@ float AShooterCharacter::TakeDamage(float DamageAmount, FDamageEvent const& Dama
 	//TODO check if the damage was from the front or back and use different animations based on that
 	//UE_LOG(LogTemp, Warning, TEXT("%s Health: %f"), *GetOwner()->GetName(), Health);
 
-	if(IsDead())
+	if (IsDead())
 	{
 		auto GameMode = GetWorld()->GetAuthGameMode<ASimpleShooterGameModeBase>();
 		if (GameMode != nullptr)
 		{
 			GameMode->PawnKilled(this);
 		}
-		
+
 		DetachFromControllerPendingDestroy(); //disables gun + movement
 		GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	}
-	
+
 	return Health;
 }
 
@@ -150,11 +169,77 @@ void AShooterCharacter::LookRightRate(float AxisValue)
 
 void AShooterCharacter::FireGun()
 {
-	if (Gun == nullptr)
+	if (Guns.Num() == 0)
 		return;
-	
-	Gun->PullTrigger();
-	//BigPipiGun->PullTrigger();
+
+	Guns[ActiveGunIndex]->PullTrigger();
+}
+
+void AShooterCharacter::OnChangeToGun1()
+{
+	ChangeToGun(0);
+}
+
+void AShooterCharacter::OnChangeToGun2()
+{
+	ChangeToGun(1);
+}
+
+void AShooterCharacter::OnChangeToGun3()
+{
+	ChangeToGun(2);
+}
+
+void AShooterCharacter::OnChangeToNextGun()
+{
+	if (Guns.Num() == 0)
+		return;
+
+	auto NextIndex = ActiveGunIndex;
+	NextIndex = ++NextIndex % Guns.Num();
+	ChangeToGun(NextIndex);
+}
+
+void AShooterCharacter::OnChangeToPrevGun()
+{
+	if (Guns.Num() == 0)
+		return;
+
+	auto NextIndex = ActiveGunIndex;
+	if (NextIndex == 0)
+		NextIndex = Guns.Num() - 1;
+	else
+		--NextIndex;
+
+	ChangeToGun(NextIndex);
+}
+
+void AShooterCharacter::ChangeToGun(int32 Index)
+{
+	if (Guns.Num() == 0 || Index >= Guns.Num() || ActiveGunIndex == Index)
+		return;
+
+	ActiveGunIndex = Index;
+	for (int i = 0; i < Guns.Num(); ++i)
+	{
+		if (i == Index)
+			Guns[i]->ShowActor();
+		else
+			Guns[i]->HideActor();
+	}
+
+	//special case for the default gun that is built in the character model
+	if (Index == 0)
+	{
+		GetMesh()->UnHideBoneByName(TEXT("weapon_r"));
+	}
+	else
+	{
+		GetMesh()->HideBoneByName(TEXT("weapon_r"), EPhysBodyOp::PBO_None);
+	}
+
+	UGameplayStatics::SpawnSoundAtLocation(GetWorld(), ChangingWeaponSound, GetActorLocation());
+
 }
 
 void AShooterCharacter::OnUseItem()
@@ -165,21 +250,11 @@ void AShooterCharacter::OnUseItem()
 	if (Result.Num() == 0)
 		return;
 
-	for(AActor* Actor: Result)
+	for (AActor* Actor : Result)
 	{
 		Cast<APickableItemBase>(Actor)->PickItem(this);
 	}
-	
-	/*
-	auto PlayerPawn = UGameplayStatics::GetPlayerPawn(GetWorld(), 0);
-	if (IsOverlappingActor(PlayerPawn))
-	{
-		PickItem(PlayerPawn);
-	}*/
 }
-
-
-
 
 //void AShooterCharacter::LookUp(float AxisValue)
 //{

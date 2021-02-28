@@ -22,30 +22,40 @@ protected:
 
 public:
 	void FireGun();
+	void OnChangeToGun1();
+	void OnChangeToGun2();
+	void OnChangeToGun3();
+	void OnChangeToNextGun();
+	void OnChangeToPrevGun();
+
+	void ChangeToGun(int32 Index);
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+		int32 ActiveGunIndex;
 
 	UFUNCTION(BlueprintPure)
-	bool IsDead() const;
+		bool IsDead() const;
 
 	UFUNCTION(BlueprintPure)
-	float GetHealthPercent() const;
+		float GetHealthPercent() const;
 
 	UFUNCTION(BlueprintPure)
-	float GetSelectedWeaponAmmo() const;
+		float GetSelectedWeaponAmmo() const;
 
 	UFUNCTION(BlueprintPure)
-	float GetSelectedWeaponMaxAmmo() const;
+		float GetSelectedWeaponMaxAmmo() const;
 
 	UFUNCTION(BlueprintCallable)
-	void AddHealth(float HealthToAdd);
+		void AddHealth(float HealthToAdd);
 
 	UFUNCTION(BlueprintPure)
-	bool CanAddHealth() const;
+		bool CanAddHealth() const;
 
 	UFUNCTION(BlueprintCallable)
-	void AddAmmo(int32 Ammo);
+		void AddAmmo(int32 Ammo);
 
 	UFUNCTION(BlueprintPure)
-	bool CanAddAmmo() const;
+		bool CanAddAmmo() const;
 
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
@@ -64,20 +74,20 @@ private:
 	void OnUseItem();
 
 	UPROPERTY(EditAnywhere)
-	float RotationRate = 80.f;
+		float RotationRate = 80.f;
 
 	UPROPERTY(EditDefaultsOnly)
-	float MaxHealth = 100.f;
+		float MaxHealth = 100.f;
 
 	UPROPERTY(VisibleAnywhere)
-	float Health;
+		float Health;
 
 	UPROPERTY(EditDefaultsOnly)
-	TSubclassOf<AGun> GunClass = nullptr;
+		TArray<TSubclassOf<AGun>> GunClassArray;
 
 	UPROPERTY()
-	AGun* Gun = nullptr;
-	AGun* BigPipiGun = nullptr;
+		TArray<AGun*> Guns;
 
-
+	UPROPERTY(EditAnywhere)
+		USoundBase* ChangingWeaponSound;
 };
